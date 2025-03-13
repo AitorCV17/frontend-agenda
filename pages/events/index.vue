@@ -1,23 +1,23 @@
+<!-- pages/events/index.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import { useEvents, type Event } from '~/composables/useEvents'
 import EventForm from '~/components/events/EventForm.vue'
 
-const { getEvents, createEvent, updateEvent, deleteEvent } = useEvents()
+const { getEvents, createEvent, updateEvent, deleteEvent, events } = useEvents()
 
-const events = ref<Event[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
-// Control del diálogo para crear/editar
+// Control del diálogo/modal para crear/editar evento
 const showForm = ref(false)
 const isEditing = ref(false)
-const currentEvent = ref<Event | null>(null)
+const currentEvent = ref<Event | undefined>(undefined)
 
 const loadEvents = async () => {
   loading.value = true
   try {
-    events.value = await getEvents()
+    await getEvents()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al cargar eventos'
   } finally {
@@ -29,9 +29,13 @@ onMounted(() => {
   loadEvents()
 })
 
-// Función para crear un nuevo evento: reinicia el estado
+watchEffect(() => {
+  loadEvents()
+})
+
+// Función para iniciar creación de un nuevo evento
 const onClickNewEvent = () => {
-  currentEvent.value = null
+  currentEvent.value = undefined  
   isEditing.value = false
   showForm.value = true
 }
@@ -43,8 +47,7 @@ const onSaveEvent = async (data: { title: string; description?: string; startTim
     } else {
       await createEvent(data)
     }
-    await loadEvents()
-    onCancelForm()  // Reiniciamos el estado del modal
+    showForm.value = false
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar el evento'
   }
@@ -59,7 +62,6 @@ const onEditEvent = (event: Event) => {
 const onDeleteEvent = async (id: number) => {
   try {
     await deleteEvent(id)
-    await loadEvents()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al eliminar el evento'
   }
@@ -67,15 +69,14 @@ const onDeleteEvent = async (id: number) => {
 
 const onCancelForm = () => {
   showForm.value = false
-  currentEvent.value = null
+  currentEvent.value = undefined  
   isEditing.value = false
 }
 </script>
 
 <template>
   <v-container>
-    <h1>Eventos</h1>
-    <!-- Botón para crear un nuevo evento, usando la función de reset -->
+    <h1>Mis Eventos</h1>
     <v-btn color="primary" variant="elevated" @click="onClickNewEvent">
       Nuevo Evento
     </v-btn>
@@ -83,7 +84,7 @@ const onCancelForm = () => {
     <v-alert v-if="errorMsg" type="error" class="mt-3">
       {{ errorMsg }}
     </v-alert>
-    
+
     <v-row class="mt-5" v-if="events.length">
       <v-col v-for="event in events" :key="event.id" cols="12" md="4">
         <v-card class="pa-3">
@@ -95,23 +96,29 @@ const onCancelForm = () => {
             <div v-if="event.location">Ubicación: {{ event.location }}</div>
           </v-card-text>
           <v-card-actions>
-            <v-btn variant="text" color="primary" @click="onEditEvent(event)">Editar</v-btn>
-            <v-btn variant="text" color="error" @click="onDeleteEvent(event.id)">Eliminar</v-btn>
+            <v-btn variant="text" color="primary" @click="onEditEvent(event)">
+              Editar
+            </v-btn>
+            <v-btn variant="text" color="error" @click="onDeleteEvent(event.id)">
+              Eliminar
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
-    
+
     <v-alert v-else type="info" class="mt-3">
       No se encontraron eventos.
     </v-alert>
-    
+
     <v-dialog v-model="showForm" max-width="600">
       <v-card>
-        <v-card-title>{{ isEditing ? 'Editar Evento' : 'Nuevo Evento' }}</v-card-title>
+        <v-card-title>
+          {{ isEditing ? 'Editar Evento' : 'Nuevo Evento' }}
+        </v-card-title>
         <v-card-text>
           <EventForm 
-            :event="currentEvent ? { title: currentEvent.title, description: currentEvent.description, startTime: currentEvent.startTime, endTime: currentEvent.endTime, location: currentEvent.location } : undefined" 
+            :event="currentEvent ?? undefined" 
             @save="onSaveEvent" 
             @cancel="onCancelForm" 
           />

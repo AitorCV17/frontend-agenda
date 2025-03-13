@@ -1,24 +1,23 @@
 <!-- pages/tasks/index.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import { useTasks, type Task } from '~/composables/useTasks'
 import TaskForm from '~/components/tasks/TaskForm.vue'
 
-const { getTasks, createTask, updateTask, deleteTask } = useTasks()
+const { getTasks, createTask, updateTask, deleteTask, tasks } = useTasks()
 
-const tasks = ref<Task[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
 // Control del diálogo/modal para crear/editar tarea
 const showForm = ref(false)
 const isEditing = ref(false)
-const currentTask = ref<Task | null>(null)
+const currentTask = ref<Task | undefined>(undefined)
 
 const loadTasks = async () => {
   loading.value = true
   try {
-    tasks.value = await getTasks()
+    await getTasks()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al cargar tareas'
   } finally {
@@ -30,9 +29,13 @@ onMounted(() => {
   loadTasks()
 })
 
-// Función para iniciar creación de una nueva tarea (reinicia el estado)
+watchEffect(() => {
+  loadTasks()
+})
+
+// Función para iniciar creación de una nueva tarea
 const onClickNewTask = () => {
-  currentTask.value = null
+  currentTask.value = undefined  // 🔥 Evita el error de TypeScript
   isEditing.value = false
   showForm.value = true
 }
@@ -44,8 +47,7 @@ const onSaveTask = async (data: { title: string; description?: string; dueDate?:
     } else {
       await createTask(data)
     }
-    await loadTasks()
-    onCancelForm()
+    showForm.value = false
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar la tarea'
   }
@@ -60,7 +62,6 @@ const onEditTask = (task: Task) => {
 const onDeleteTask = async (id: number) => {
   try {
     await deleteTask(id)
-    await loadTasks()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al eliminar la tarea'
   }
@@ -68,7 +69,7 @@ const onDeleteTask = async (id: number) => {
 
 const onCancelForm = () => {
   showForm.value = false
-  currentTask.value = null
+  currentTask.value = undefined  // 🔥 Asignamos undefined en lugar de null
   isEditing.value = false
 }
 </script>
@@ -122,7 +123,7 @@ const onCancelForm = () => {
         </v-card-title>
         <v-card-text>
           <TaskForm 
-            :task="currentTask ? { title: currentTask.title, description: currentTask.description, dueDate: currentTask.dueDate, completed: currentTask.completed } : undefined" 
+            :task="currentTask ?? undefined" 
             @save="onSaveTask" 
             @cancel="onCancelForm" 
           />

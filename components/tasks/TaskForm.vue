@@ -11,7 +11,7 @@ interface TaskFormData {
 }
 
 const props = defineProps<{
-  task?: TaskFormData
+  task?: TaskFormData | undefined  // 🔥 Permitimos undefined
 }>()
 
 const emits = defineEmits<{
@@ -26,15 +26,15 @@ const formatDate = (dateString?: string): string => {
   return date.toISOString().substring(0, 10)
 }
 
-// Inicializamos el formulario utilizando la prop "task" (o valores por defecto).
+// Inicializamos el formulario con valores por defecto
 const formData = ref<TaskFormData>({
-  title: props.task?.title || '',
-  description: props.task?.description || '',
-  dueDate: props.task?.dueDate ? formatDate(props.task.dueDate) : '',
-  completed: props.task?.completed ?? false
+  title: '',
+  description: '',
+  dueDate: '',
+  completed: false
 })
 
-// Si cambia la prop "task", actualiza el formulario y formatea la fecha.
+// Si cambia la prop "task", actualiza el formulario
 watch(
   () => props.task,
   (newVal) => {
@@ -46,13 +46,13 @@ watch(
     } else {
       formData.value = { title: '', description: '', dueDate: '', completed: false }
     }
-  }
+  },
+  { immediate: true }  // 🔥 Carga valores iniciales al montar el componente
 )
 
 // Función para enviar el formulario
 const onSubmit = () => {
-  // Validación básica: se requiere un título
-  if (!formData.value.title) return
+  if (!formData.value.title) return  // Validación básica
   emits('save', formData.value)
 }
 

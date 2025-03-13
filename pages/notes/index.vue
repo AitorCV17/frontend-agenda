@@ -1,24 +1,23 @@
 <!-- pages/notes/index.vue -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import { useNotes, type Note } from '~/composables/useNotes'
 import NoteForm from '~/components/notes/NoteForm.vue'
 
-const { getNotes, createNote, updateNote, deleteNote } = useNotes()
+const { getNotes, createNote, updateNote, deleteNote, notes } = useNotes()
 
-const notes = ref<Note[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
-// Control del diálogo/modal para crear/editar
+// Control del diálogo/modal para crear/editar nota
 const showForm = ref(false)
 const isEditing = ref(false)
-const currentNote = ref<Note | null>(null)
+const currentNote = ref<Note | undefined>(undefined)
 
 const loadNotes = async () => {
   loading.value = true
   try {
-    notes.value = await getNotes()
+    await getNotes()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al cargar notas'
   } finally {
@@ -30,9 +29,13 @@ onMounted(() => {
   loadNotes()
 })
 
-// Función para iniciar creación de una nueva nota (reinicia el estado)
+watchEffect(() => {
+  loadNotes()
+})
+
+// Función para iniciar creación de una nueva nota
 const onClickNewNote = () => {
-  currentNote.value = null
+  currentNote.value = undefined  
   isEditing.value = false
   showForm.value = true
 }
@@ -44,8 +47,7 @@ const onSaveNote = async (data: { title: string; content: string }) => {
     } else {
       await createNote(data)
     }
-    await loadNotes()
-    onCancelForm()  // Reinicia el modal
+    showForm.value = false
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar la nota'
   }
@@ -60,7 +62,6 @@ const onEditNote = (note: Note) => {
 const onDeleteNote = async (id: number) => {
   try {
     await deleteNote(id)
-    await loadNotes()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al eliminar la nota'
   }
@@ -68,7 +69,7 @@ const onDeleteNote = async (id: number) => {
 
 const onCancelForm = () => {
   showForm.value = false
-  currentNote.value = null
+  currentNote.value = undefined  
   isEditing.value = false
 }
 </script>
@@ -84,7 +85,6 @@ const onCancelForm = () => {
       {{ errorMsg }}
     </v-alert>
 
-    <!-- Lista de notas -->
     <v-row class="mt-5" v-if="notes.length">
       <v-col v-for="note in notes" :key="note.id" cols="12" md="4">
         <v-card class="pa-3">
@@ -106,7 +106,6 @@ const onCancelForm = () => {
       No se encontraron notas.
     </v-alert>
 
-    <!-- Modal para crear/editar nota -->
     <v-dialog v-model="showForm" max-width="600">
       <v-card>
         <v-card-title>
@@ -114,7 +113,7 @@ const onCancelForm = () => {
         </v-card-title>
         <v-card-text>
           <NoteForm 
-            :note="currentNote ? { title: currentNote.title, content: currentNote.content } : undefined" 
+            :note="currentNote ?? undefined" 
             @save="onSaveNote" 
             @cancel="onCancelForm" 
           />

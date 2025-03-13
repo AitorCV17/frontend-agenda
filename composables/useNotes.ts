@@ -1,5 +1,5 @@
 // composables/useNotes.ts
-import { useCookie, useRuntimeConfig, useFetch } from '#app'
+import { useCookie, useRuntimeConfig, useFetch, useState } from '#app'
 import type { Login } from '~/interfaces/Login.Interface'
 
 export interface Note {
@@ -15,6 +15,9 @@ export const useNotes = () => {
   const baseURL = config.public.baseURL || useCookie('BASE_URL').value
   const userCookie = useCookie<Login | null>('user')
 
+  // 🔥 Usamos useState para mantener las notas en memoria y evitar que desaparezcan 🔥
+  const notes = useState<Note[]>('notes', () => [])
+
   const getNotes = async (): Promise<Note[]> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; data: Note[] }>(`${baseURL}/notes`, {
@@ -25,7 +28,9 @@ export const useNotes = () => {
       server: false
     })
     if (error.value) throw new Error(error.value.message)
-    return data.value?.data || []
+
+    notes.value = data.value?.data || []
+    return notes.value
   }
 
   const createNote = async (note: { title: string; content: string }): Promise<Note> => {
@@ -39,8 +44,9 @@ export const useNotes = () => {
       server: false
     })
     if (error.value) throw new Error(error.value.message)
-    if (!data.value?.data) throw new Error("Error al crear la nota")
-    return data.value.data
+
+    notes.value.push(data.value!.data) // 🔥 Agregamos la nueva nota en memoria
+    return data.value!.data
   }
 
   const updateNote = async (note: { id: number; title?: string; content?: string }): Promise<Note> => {
@@ -54,8 +60,12 @@ export const useNotes = () => {
       server: false
     })
     if (error.value) throw new Error(error.value.message)
-    if (!data.value?.data) throw new Error("Error al actualizar la nota")
-    return data.value.data
+
+    // 🔥 Actualizamos la nota en memoria
+    const index = notes.value.findIndex(n => n.id === note.id)
+    if (index !== -1) notes.value[index] = data.value!.data
+
+    return data.value!.data
   }
 
   const deleteNote = async (id: number): Promise<Note> => {
@@ -68,9 +78,10 @@ export const useNotes = () => {
       server: false
     })
     if (error.value) throw new Error(error.value.message)
-    if (!data.value?.data) throw new Error("Error al eliminar la nota")
-    return data.value.data
+
+    notes.value = notes.value.filter(n => n.id !== id) // 🔥 Eliminamos la nota en memoria
+    return data.value!.data
   }
 
-  return { getNotes, createNote, updateNote, deleteNote }
+  return { getNotes, createNote, updateNote, deleteNote, notes }
 }
