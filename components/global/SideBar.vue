@@ -25,6 +25,14 @@ const menus = ref([
     toSub: null
   },
   {
+    icon: "mdi-calendar",
+    title: "Calendario",
+    value: "calendario",
+    to: "/calendar",
+    view: true,
+    toSub: null
+  },
+  {
     icon: "mdi-note-text",
     title: "Notas",
     value: "notas",
