@@ -3,7 +3,6 @@
 import { ref, onMounted } from 'vue'
 import { useNotes, type Note } from '~/composables/useNotes'
 import NoteForm from '~/components/notes/NoteForm.vue'
-import { useAsyncData } from '#app'
 
 const { getNotes, createNote, updateNote, deleteNote } = useNotes()
 
@@ -11,7 +10,7 @@ const notes = ref<Note[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
-// Control de diálogo/modal para crear/editar
+// Control del diálogo/modal para crear/editar
 const showForm = ref(false)
 const isEditing = ref(false)
 const currentNote = ref<Note | null>(null)
@@ -31,7 +30,13 @@ onMounted(() => {
   loadNotes()
 })
 
-// Manejar guardar (crear o editar)
+// Función para iniciar creación de una nueva nota (reinicia el estado)
+const onClickNewNote = () => {
+  currentNote.value = null
+  isEditing.value = false
+  showForm.value = true
+}
+
 const onSaveNote = async (data: { title: string; content: string }) => {
   try {
     if (isEditing.value && currentNote.value) {
@@ -40,9 +45,7 @@ const onSaveNote = async (data: { title: string; content: string }) => {
       await createNote(data)
     }
     await loadNotes()
-    showForm.value = false
-    currentNote.value = null
-    isEditing.value = false
+    onCancelForm()  // Reinicia el modal
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar la nota'
   }
@@ -73,7 +76,7 @@ const onCancelForm = () => {
 <template>
   <v-container>
     <h1>Mis Notas</h1>
-    <v-btn color="primary" variant="elevated" @click="showForm = true">
+    <v-btn color="primary" variant="elevated" @click="onClickNewNote">
       Nueva Nota
     </v-btn>
     
@@ -88,14 +91,17 @@ const onCancelForm = () => {
           <v-card-title>{{ note.title }}</v-card-title>
           <v-card-text>{{ note.content }}</v-card-text>
           <v-card-actions>
-            <v-btn variant="text" color="primary" @click="onEditNote(note)">Editar</v-btn>
-            <v-btn variant="text" color="error" @click="onDeleteNote(note.id)">Eliminar</v-btn>
+            <v-btn variant="text" color="primary" @click="onEditNote(note)">
+              Editar
+            </v-btn>
+            <v-btn variant="text" color="error" @click="onDeleteNote(note.id)">
+              Eliminar
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- Si no hay notas -->
     <v-alert v-else type="info" class="mt-3">
       No se encontraron notas.
     </v-alert>
@@ -103,9 +109,15 @@ const onCancelForm = () => {
     <!-- Modal para crear/editar nota -->
     <v-dialog v-model="showForm" max-width="600">
       <v-card>
-        <v-card-title>{{ isEditing ? 'Editar Nota' : 'Nueva Nota' }}</v-card-title>
+        <v-card-title>
+          {{ isEditing ? 'Editar Nota' : 'Nueva Nota' }}
+        </v-card-title>
         <v-card-text>
-          <NoteForm :note="currentNote ? { title: currentNote.title, content: currentNote.content } : undefined" @save="onSaveNote" @cancel="onCancelForm" />
+          <NoteForm 
+            :note="currentNote ? { title: currentNote.title, content: currentNote.content } : undefined" 
+            @save="onSaveNote" 
+            @cancel="onCancelForm" 
+          />
         </v-card-text>
       </v-card>
     </v-dialog>

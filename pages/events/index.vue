@@ -1,4 +1,3 @@
-<!-- pages/events/index.vue -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useEvents, type Event } from '~/composables/useEvents'
@@ -30,6 +29,13 @@ onMounted(() => {
   loadEvents()
 })
 
+// Función para crear un nuevo evento: reinicia el estado
+const onClickNewEvent = () => {
+  currentEvent.value = null
+  isEditing.value = false
+  showForm.value = true
+}
+
 const onSaveEvent = async (data: { title: string; description?: string; startTime: string; endTime: string; location?: string }) => {
   try {
     if (isEditing.value && currentEvent.value) {
@@ -38,9 +44,7 @@ const onSaveEvent = async (data: { title: string; description?: string; startTim
       await createEvent(data)
     }
     await loadEvents()
-    showForm.value = false
-    currentEvent.value = null
-    isEditing.value = false
+    onCancelForm()  // Reiniciamos el estado del modal
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar el evento'
   }
@@ -71,7 +75,8 @@ const onCancelForm = () => {
 <template>
   <v-container>
     <h1>Eventos</h1>
-    <v-btn color="primary" variant="elevated" @click="showForm = true">
+    <!-- Botón para crear un nuevo evento, usando la función de reset -->
+    <v-btn color="primary" variant="elevated" @click="onClickNewEvent">
       Nuevo Evento
     </v-btn>
     

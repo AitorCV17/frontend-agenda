@@ -10,7 +10,7 @@ const tasks = ref<Task[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
-// Control para mostrar el formulario (modal)
+// Control del diálogo/modal para crear/editar tarea
 const showForm = ref(false)
 const isEditing = ref(false)
 const currentTask = ref<Task | null>(null)
@@ -30,7 +30,13 @@ onMounted(() => {
   loadTasks()
 })
 
-// Función para guardar tarea (crear o editar)
+// Función para iniciar creación de una nueva tarea (reinicia el estado)
+const onClickNewTask = () => {
+  currentTask.value = null
+  isEditing.value = false
+  showForm.value = true
+}
+
 const onSaveTask = async (data: { title: string; description?: string; dueDate?: string; completed?: boolean }) => {
   try {
     if (isEditing.value && currentTask.value) {
@@ -39,9 +45,7 @@ const onSaveTask = async (data: { title: string; description?: string; dueDate?:
       await createTask(data)
     }
     await loadTasks()
-    showForm.value = false
-    currentTask.value = null
-    isEditing.value = false
+    onCancelForm()
   } catch (error: any) {
     errorMsg.value = error.message || 'Error al guardar la tarea'
   }
@@ -72,7 +76,7 @@ const onCancelForm = () => {
 <template>
   <v-container>
     <h1>Mis Tareas</h1>
-    <v-btn color="primary" variant="elevated" @click="showForm = true">
+    <v-btn color="primary" variant="elevated" @click="onClickNewTask">
       Nueva Tarea
     </v-btn>
     
@@ -87,12 +91,20 @@ const onCancelForm = () => {
           <v-card-title>{{ task.title }}</v-card-title>
           <v-card-text>
             <div>{{ task.description }}</div>
-            <div v-if="task.dueDate">Fecha límite: {{ task.dueDate }}</div>
-            <div>Completado: {{ task.completed ? 'Sí' : 'No' }}</div>
+            <div v-if="task.dueDate">
+              Fecha límite: {{ task.dueDate }}
+            </div>
+            <div>
+              Completado: {{ task.completed ? 'Sí' : 'No' }}
+            </div>
           </v-card-text>
           <v-card-actions>
-            <v-btn variant="text" color="primary" @click="onEditTask(task)">Editar</v-btn>
-            <v-btn variant="text" color="error" @click="onDeleteTask(task.id)">Eliminar</v-btn>
+            <v-btn variant="text" color="primary" @click="onEditTask(task)">
+              Editar
+            </v-btn>
+            <v-btn variant="text" color="error" @click="onDeleteTask(task.id)">
+              Eliminar
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -105,7 +117,9 @@ const onCancelForm = () => {
     <!-- Modal para crear/editar tarea -->
     <v-dialog v-model="showForm" max-width="600">
       <v-card>
-        <v-card-title>{{ isEditing ? 'Editar Tarea' : 'Nueva Tarea' }}</v-card-title>
+        <v-card-title>
+          {{ isEditing ? 'Editar Tarea' : 'Nueva Tarea' }}
+        </v-card-title>
         <v-card-text>
           <TaskForm 
             :task="currentTask ? { title: currentTask.title, description: currentTask.description, dueDate: currentTask.dueDate, completed: currentTask.completed } : undefined" 
