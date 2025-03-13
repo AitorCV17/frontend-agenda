@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, watch } from 'vue'
 
+// Definición de la interfaz para los datos del formulario
 interface TaskFormData {
   title: string
   description?: string
@@ -9,23 +10,26 @@ interface TaskFormData {
   completed?: boolean
 }
 
+// Definición de props; si se envía la prop "task", el formulario entra en modo edición.
 const props = defineProps<{
-  task?: TaskFormData  // Si se envía, es modo edición; si no, creación.
+  task?: TaskFormData
 }>()
 
+// Se definen los eventos que se emitirán: 'save' y 'cancel'
 const emits = defineEmits<{
   (e: 'save', payload: TaskFormData): void
   (e: 'cancel'): void
 }>()
 
+// Inicializamos el formulario utilizando la prop "task" (o valores por defecto).
 const formData = ref<TaskFormData>({
   title: props.task?.title || '',
   description: props.task?.description || '',
   dueDate: props.task?.dueDate || '',
-  completed: props.task?.completed || false,
+  completed: props.task?.completed ?? false
 })
 
-// Si cambia la prop "task", actualiza el formulario.
+// Observamos la prop "task" para actualizar el formulario si cambia.
 watch(
   () => props.task,
   (newVal) => {
@@ -37,11 +41,14 @@ watch(
   }
 )
 
+// Función para enviar el formulario
 const onSubmit = () => {
-  if (!formData.value.title) return  // Validación básica; se puede ampliar
+  // Validación básica: se requiere un título
+  if (!formData.value.title) return
   emits('save', formData.value)
 }
 
+// Función para cancelar la operación
 const onCancel = () => {
   emits('cancel')
 }

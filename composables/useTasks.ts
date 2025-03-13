@@ -28,18 +28,18 @@ export const useTasks = () => {
       }
     })
     if (error.value) throw new Error(error.value.message)
-    if (!data.value?.data) return []
-    return data.value.data
+    return data.value?.data || []
   }
 
   // Crea una nueva tarea
-  const createTask = async (task: { title: string; description?: string; dueDate?: string }): Promise<Task> => {
+  const createTask = async (task: { title: string; description?: string; dueDate?: string; completed?: boolean }): Promise<Task> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Task }>(`${baseURL}/tasks`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
+      // Se añade el userId obtenido de la cookie, y se envía completed si se incluye
       body: { ...task, userId: userCookie.value.id }
     })
     if (error.value) throw new Error(error.value.message)
@@ -55,6 +55,7 @@ export const useTasks = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
+      // Se añade el userId para asegurar la actualización de la tarea asociada
       body: { ...task, userId: userCookie.value.id }
     })
     if (error.value) throw new Error(error.value.message)

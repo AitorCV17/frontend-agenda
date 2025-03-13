@@ -1,9 +1,11 @@
+// interfaces/Login.Interface.ts
 export interface Login {
-    id: number;       // Agrega esta línea
+    id: number;  // <--- ya lo agregaste, pero confirma que existe
     status?: boolean;
     msg?: string;
-    name: string;     // Se usará 'name' en lugar de 'nombres'
+    name: string;
     email: string;
     token: string;
-    role: string;     // Se usará 'role' en lugar de 'tipoUsuario'
-}
+    role: string;
+  }
+  
