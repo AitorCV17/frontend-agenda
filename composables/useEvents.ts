@@ -24,7 +24,8 @@ export const useEvents = () => {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     return data.value?.data || []
@@ -37,7 +38,8 @@ export const useEvents = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...event, userId: userCookie.value.id }
+      body: { ...event, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al crear el evento")
@@ -51,7 +53,8 @@ export const useEvents = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...event, userId: userCookie.value.id }
+      body: { ...event, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al actualizar el evento")
@@ -64,7 +67,8 @@ export const useEvents = () => {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al eliminar el evento")

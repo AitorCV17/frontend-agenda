@@ -21,7 +21,8 @@ export const useNotes = () => {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     return data.value?.data || []
@@ -34,7 +35,8 @@ export const useNotes = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...note, userId: userCookie.value.id }
+      body: { ...note, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al crear la nota")
@@ -48,7 +50,8 @@ export const useNotes = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...note, userId: userCookie.value.id }
+      body: { ...note, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al actualizar la nota")
@@ -61,7 +64,8 @@ export const useNotes = () => {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al eliminar la nota")

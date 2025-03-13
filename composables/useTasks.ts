@@ -23,7 +23,8 @@ export const useTasks = () => {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     return data.value?.data || []
@@ -36,7 +37,8 @@ export const useTasks = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...task, userId: userCookie.value.id }
+      body: { ...task, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al crear la tarea")
@@ -50,7 +52,8 @@ export const useTasks = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      body: { ...task, userId: userCookie.value.id }
+      body: { ...task, userId: userCookie.value.id },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al actualizar la tarea")
@@ -63,7 +66,8 @@ export const useTasks = () => {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
-      }
+      },
+      server: false
     })
     if (error.value) throw new Error(error.value.message)
     if (!data.value?.data) throw new Error("Error al eliminar la tarea")
