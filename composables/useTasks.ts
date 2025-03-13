@@ -12,13 +12,11 @@ export interface Task {
   updatedAt: string
 }
 
-// Definimos la cookie tipada para el usuario
-const userCookie = useCookie<Login | null>('user')
-
 export const useTasks = () => {
-  const baseURL = useRuntimeConfig().public.baseURL || useCookie('BASE_URL').value
+  const config = useRuntimeConfig()
+  const baseURL = config.public.baseURL || useCookie('BASE_URL').value
+  const userCookie = useCookie<Login | null>('user')
 
-  // Obtiene todas las tareas del usuario
   const getTasks = async (): Promise<Task[]> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; data: Task[] }>(`${baseURL}/tasks`, {
@@ -31,7 +29,6 @@ export const useTasks = () => {
     return data.value?.data || []
   }
 
-  // Crea una nueva tarea
   const createTask = async (task: { title: string; description?: string; dueDate?: string; completed?: boolean }): Promise<Task> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Task }>(`${baseURL}/tasks`, {
@@ -39,7 +36,6 @@ export const useTasks = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      // Se añade el userId obtenido de la cookie, y se envía completed si se incluye
       body: { ...task, userId: userCookie.value.id }
     })
     if (error.value) throw new Error(error.value.message)
@@ -47,7 +43,6 @@ export const useTasks = () => {
     return data.value.data
   }
 
-  // Actualiza una tarea existente
   const updateTask = async (task: { id: number; title?: string; description?: string; dueDate?: string; completed?: boolean }): Promise<Task> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Task }>(`${baseURL}/tasks/${task.id}`, {
@@ -55,7 +50,6 @@ export const useTasks = () => {
       headers: {
         Authorization: `Bearer ${userCookie.value.token}`
       },
-      // Se añade el userId para asegurar la actualización de la tarea asociada
       body: { ...task, userId: userCookie.value.id }
     })
     if (error.value) throw new Error(error.value.message)
@@ -63,7 +57,6 @@ export const useTasks = () => {
     return data.value.data
   }
 
-  // Elimina una tarea
   const deleteTask = async (id: number): Promise<Task> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Task }>(`${baseURL}/tasks/${id}`, {

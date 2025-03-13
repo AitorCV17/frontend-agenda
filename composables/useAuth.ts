@@ -1,13 +1,13 @@
+// composables/useAuth.ts
 import type { Login } from '~/interfaces/Login.Interface'
-import { useCookie } from '#app'
+import { useCookie, useRuntimeConfig } from '#app'
 
 export const useAuth = () => {
-  const baseURL = useRuntimeConfig().public.baseURL || useCookie("BASE_URL").value
+  const config = useRuntimeConfig()
+  // Se obtiene la URL base y la cookie dentro de la función
+  const baseURL = config.public.baseURL || useCookie("BASE_URL").value
   const userCookie = useCookie<Login | null>("user")
 
-  /**
-   * Login: envía { email, password } al backend => /auth/login
-   */
   const login = async (correo: string, contraseña: string): Promise<{ success: boolean; msg?: string }> => {
     try {
       const { data } = await useFetch<Login>(`${baseURL}/auth/login`, {
@@ -19,7 +19,6 @@ export const useAuth = () => {
       })
       
       if (data.value && data.value.token) {
-        // Ahora el backend devuelve { name, email, token, role, ... }
         userCookie.value = data.value
         return { success: true }
       }
@@ -29,16 +28,13 @@ export const useAuth = () => {
     }
   }
 
-  /**
-   * Register: envía { name, email, password, role } => /usuario
-   */
   const register = async (name: string, correo: string, contraseña: string): Promise<{ success: boolean; msg?: string }> => {
     try {
       const { data } = await useFetch<any>(`${baseURL}/usuario`, {
         method: 'POST',
         body: {
-          name,              // El backend espera "name"
-          email: correo,     // El backend espera "email"
+          name,
+          email: correo,
           password: contraseña,
           role: 'REGULAR'
         }

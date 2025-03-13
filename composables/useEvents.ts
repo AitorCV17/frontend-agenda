@@ -13,10 +13,10 @@ export interface Event {
   updatedAt: string
 }
 
-const userCookie = useCookie<Login | null>('user')
-
 export const useEvents = () => {
-  const baseURL = useRuntimeConfig().public.baseURL || useCookie('BASE_URL').value
+  const config = useRuntimeConfig()
+  const baseURL = config.public.baseURL || useCookie('BASE_URL').value
+  const userCookie = useCookie<Login | null>('user')
 
   const getEvents = async (): Promise<Event[]> => {
     if (!userCookie.value) throw new Error("Usuario no autenticado")

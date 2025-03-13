@@ -1,7 +1,6 @@
 // composables/useNotes.ts
 import { useCookie, useRuntimeConfig, useFetch } from '#app'
 import type { Login } from '~/interfaces/Login.Interface'
-import type { Ref } from 'vue'
 
 export interface Note {
   id: number
@@ -11,17 +10,13 @@ export interface Note {
   updatedAt: string
 }
 
-// Definimos la cookie tipada para el usuario fuera de la función
-const userCookie = useCookie<Login | null>('user')
-
 export const useNotes = () => {
-  const baseURL = useRuntimeConfig().public.baseURL || useCookie('BASE_URL').value
+  const config = useRuntimeConfig()
+  const baseURL = config.public.baseURL || useCookie('BASE_URL').value
+  const userCookie = useCookie<Login | null>('user')
 
-  // Obtiene todas las notas del usuario
   const getNotes = async (): Promise<Note[]> => {
-    if (!userCookie.value) {
-      throw new Error("Usuario no autenticado")
-    }
+    if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; data: Note[] }>(`${baseURL}/notes`, {
       method: 'GET',
       headers: {
@@ -29,15 +24,11 @@ export const useNotes = () => {
       }
     })
     if (error.value) throw new Error(error.value.message)
-    if (!data.value?.data) return []
-    return data.value.data
+    return data.value?.data || []
   }
 
-  // Crea una nueva nota
   const createNote = async (note: { title: string; content: string }): Promise<Note> => {
-    if (!userCookie.value) {
-      throw new Error("Usuario no autenticado")
-    }
+    if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Note }>(`${baseURL}/notes`, {
       method: 'POST',
       headers: {
@@ -50,11 +41,8 @@ export const useNotes = () => {
     return data.value.data
   }
 
-  // Actualiza una nota existente
   const updateNote = async (note: { id: number; title?: string; content?: string }): Promise<Note> => {
-    if (!userCookie.value) {
-      throw new Error("Usuario no autenticado")
-    }
+    if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Note }>(`${baseURL}/notes/${note.id}`, {
       method: 'PUT',
       headers: {
@@ -67,11 +55,8 @@ export const useNotes = () => {
     return data.value.data
   }
 
-  // Elimina una nota
   const deleteNote = async (id: number): Promise<Note> => {
-    if (!userCookie.value) {
-      throw new Error("Usuario no autenticado")
-    }
+    if (!userCookie.value) throw new Error("Usuario no autenticado")
     const { data, error } = await useFetch<{ success: boolean; msg: string; data: Note }>(`${baseURL}/notes/${id}`, {
       method: 'DELETE',
       headers: {
