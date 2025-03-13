@@ -10,31 +10,39 @@ interface TaskFormData {
   completed?: boolean
 }
 
-// Definición de props; si se envía la prop "task", el formulario entra en modo edición.
 const props = defineProps<{
   task?: TaskFormData
 }>()
 
-// Se definen los eventos que se emitirán: 'save' y 'cancel'
 const emits = defineEmits<{
   (e: 'save', payload: TaskFormData): void
   (e: 'cancel'): void
 }>()
 
+// Función para formatear una fecha ISO a YYYY-MM-DD
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toISOString().substring(0, 10)
+}
+
 // Inicializamos el formulario utilizando la prop "task" (o valores por defecto).
 const formData = ref<TaskFormData>({
   title: props.task?.title || '',
   description: props.task?.description || '',
-  dueDate: props.task?.dueDate || '',
+  dueDate: props.task?.dueDate ? formatDate(props.task.dueDate) : '',
   completed: props.task?.completed ?? false
 })
 
-// Observamos la prop "task" para actualizar el formulario si cambia.
+// Si cambia la prop "task", actualiza el formulario y formatea la fecha.
 watch(
   () => props.task,
   (newVal) => {
     if (newVal) {
-      formData.value = { ...newVal }
+      formData.value = {
+        ...newVal,
+        dueDate: newVal.dueDate ? formatDate(newVal.dueDate) : ''
+      }
     } else {
       formData.value = { title: '', description: '', dueDate: '', completed: false }
     }
